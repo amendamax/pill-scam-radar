@@ -698,7 +698,7 @@ async def startup_event():
             time.sleep(604800)
 
     # threading.Thread(target=_seed, daemon=True).start()
-    # threading.Thread(target=_daily_harvester, daemon=True).start()
+    threading.Thread(target=_daily_fda_harvester, daemon=True).start()
     # threading.Thread(target=_weekly_dating_harvester, daemon=True).start()
 
 # ==========================================================================
