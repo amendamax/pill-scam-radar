@@ -1198,8 +1198,7 @@ async def get_pill_sitemap():
         urls.append(f'  <url><loc>https://pillscamradar.com/scam/{row[0]}</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>')
         
     urls.append('</urlset>')
-    return Response(content="
-".join(urls), media_type="application/xml")
+    return Response(content="\n".join(urls), media_type="application/xml")
 @app.get("/og_image.png")
 async def get_og_image():
     path = os.path.join("broker-verifier", "og_image.png")
