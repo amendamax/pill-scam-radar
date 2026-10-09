@@ -10268,3 +10268,50 @@ async def get_directory_letter_page(request: Request, category: str, letter: str
     '''
     return HTMLResponse(content=html)
 
+
+
+@app.get("/api/v1/pills")
+async def api_v1_pills(search: str = "", limit: int = 50, offset: int = 0):
+    limit = min(200, max(1, limit))
+    offset = max(0, offset)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    if search:
+        search_term = f"%{search}%"
+        cursor.execute('''
+            SELECT slug, entity_name, domain_url, scam_type, severity_level, status, regulator_warnings, description, discovered_date, last_updated
+            FROM regulatory_scam_reports
+            WHERE entity_name LIKE ? OR description LIKE ?
+            ORDER BY id DESC
+            LIMIT ? OFFSET ?
+        ''', (search_term, search_term, limit, offset))
+        cursor.execute('SELECT COUNT(*) FROM regulatory_scam_reports WHERE entity_name LIKE ? OR description LIKE ?', (search_term, search_term))
+    else:
+        cursor.execute('''
+            SELECT slug, entity_name, domain_url, scam_type, severity_level, status, regulator_warnings, description, discovered_date, last_updated
+            FROM regulatory_scam_reports
+            ORDER BY id DESC
+            LIMIT ? OFFSET ?
+        ''', (limit, offset))
+        cursor.execute('SELECT COUNT(*) FROM regulatory_scam_reports')
+        
+    rows = cursor.fetchall()
+    total = cursor.fetchone()[0]
+    conn.close()
+    
+    results = []
+    for r in rows:
+        results.append({
+            "slug": r[0],
+            "entity_name": r[1],
+            "domain_url": r[2],
+            "scam_type": r[3],
+            "severity_level": r[4],
+            "status": r[5],
+            "regulator_warnings": r[6],
+            "description": r[7],
+            "discovered_date": r[8],
+            "last_updated": r[9]
+        })
+    return {"total": total, "results": results}
