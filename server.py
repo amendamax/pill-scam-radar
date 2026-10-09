@@ -697,9 +697,9 @@ async def startup_event():
             # Sleep 7 days (604,800 seconds = 1 week)
             time.sleep(604800)
 
-    threading.Thread(target=_seed, daemon=True).start()
-    threading.Thread(target=_daily_harvester, daemon=True).start()
-    threading.Thread(target=_weekly_dating_harvester, daemon=True).start()
+    # threading.Thread(target=_seed, daemon=True).start()
+    # threading.Thread(target=_daily_harvester, daemon=True).start()
+    # threading.Thread(target=_weekly_dating_harvester, daemon=True).start()
 
 # ==========================================================================
 # SENTINEL WATCHDOG & SYSTEM HEALTH ENGINE
