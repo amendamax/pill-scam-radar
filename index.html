@@ -199,7 +199,7 @@
                     html += `
                         <tr>
                             <td style="white-space: nowrap;">${item.discovered_date}</td>
-                            <td><span class="firm-name">${item.entity_name}</span><br><small>${item.domain_url}</small></td>
+                            <td><a href="/scam/${item.slug}" style="text-decoration: none;"><span class="firm-name">${item.entity_name}</span></a><br><small>${item.domain_url}</small></td>
                             <td class="description"><strong>${item.scam_type}</strong><br>${item.description}</td>
                             <td><span class="badge ${badgeClass}">${item.severity_level}</span></td>
                             <td><strong style="color: #d9534f;">${item.status}</strong></td>
