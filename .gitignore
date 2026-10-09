@@ -1,13 +1,5 @@
-# Stripe / Credentials
+﻿# Stripe / Credentials
 config.json
-
-# Databases
-database.db
-database.db-journal
-database.db-wal
-database.db-shm
-*.db
-backups/
 
 # User Uploads
 uploads/
