@@ -10286,7 +10286,9 @@ async def api_v1_pills(search: str = "", limit: int = 50, offset: int = 0):
             ORDER BY id DESC
             LIMIT ? OFFSET ?
         ''', (search_term, search_term, limit, offset))
+        rows = cursor.fetchall()
         cursor.execute('SELECT COUNT(*) FROM regulatory_scam_reports WHERE entity_name LIKE ? OR description LIKE ?', (search_term, search_term))
+        total = cursor.fetchone()[0]
     else:
         cursor.execute('''
             SELECT slug, entity_name, domain_url, scam_type, severity_level, status, regulator_warnings, description, discovered_date, last_updated
@@ -10294,10 +10296,9 @@ async def api_v1_pills(search: str = "", limit: int = 50, offset: int = 0):
             ORDER BY id DESC
             LIMIT ? OFFSET ?
         ''', (limit, offset))
+        rows = cursor.fetchall()
         cursor.execute('SELECT COUNT(*) FROM regulatory_scam_reports')
-        
-    rows = cursor.fetchall()
-    total = cursor.fetchone()[0]
+        total = cursor.fetchone()[0]
     conn.close()
     
     results = []
