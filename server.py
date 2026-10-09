@@ -1132,41 +1132,74 @@ async def get_indexnow_key():
     from fastapi.responses import Response
     return Response(content="d89b14f6824945e4a81b7e4521798361", media_type="text/plain")
 
+
+@app.get("/scam/{slug}")
+async def get_pill_scam_page(slug: str):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT entity_name, domain_url, scam_type, severity_level, status, description, discovered_date 
+        FROM regulatory_scam_reports WHERE slug = ?
+    ''', (slug,))
+    row = cursor.fetchone()
+    conn.close()
+    
+    if not row:
+        return HTMLResponse("<h1>404 Not Found</h1>", status_code=404)
+        
+    html = f'''
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>FDA Warning: {row[0]} - {row[2]}</title>
+        <meta name="description" content="Official FDA Recall for {row[0]}: {row[5][:150]}...">
+        <style>
+            body {{ font-family: 'Segoe UI', sans-serif; background: #f4f7f6; color: #333; padding: 2rem; max-width: 800px; margin: 0 auto; }}
+            .card {{ background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }}
+            h1 {{ color: #008f68; border-bottom: 2px solid #008f68; padding-bottom: 10px; }}
+            .badge {{ display: inline-block; padding: 0.5rem 1rem; border-radius: 20px; font-weight: bold; color: white; background: #d9534f; margin-bottom: 1rem; }}
+            p {{ font-size: 1.1rem; line-height: 1.6; }}
+            a.back {{ display: inline-block; margin-top: 2rem; color: #0056b3; text-decoration: none; font-weight: bold; }}
+            a.back:hover {{ text-decoration: underline; }}
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <h1>{row[0]}</h1>
+            <div class="badge">{row[3]} RISK</div>
+            <p><strong>Status:</strong> <span style="color:red;">{row[4]}</span></p>
+            <p><strong>Date Discovered:</strong> {row[6]}</p>
+            <p><strong>Violation Type:</strong> {row[2]}</p>
+            <p><strong>Details:</strong><br/>{row[5]}</p>
+            <a class="back" href="/">&larr; Back to FDA Database</a>
+        </div>
+    </body>
+    </html>
+    '''
+    return HTMLResponse(html)
+
 @app.get("/sitemap.xml")
-async def get_sitemap(request: Request):
-    host = request.headers.get("host", "").lower()
-    is_dating = "dating" in host or "verifydating" in host
-    domain = "verifydating.net" if is_dating else "isbrokersafe.com"
-    today = datetime.now().strftime("%Y-%m-%d")
+async def get_pill_sitemap():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT slug, discovered_date FROM regulatory_scam_reports")
+    rows = cursor.fetchall()
+    conn.close()
     
     urls = [
-        f'<?xml version="1.0" encoding="UTF-8"?>',
-        f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-        f'  <url><loc>https://{domain}/</loc><lastmod>{today}</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>'
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        '  <url><loc>https://pillscamradar.com/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>'
     ]
     
-    langs = ["ro", "it", "es", "fr", "de", "pt", "ru"]
-    for l in langs:
-        urls.append(f'  <url><loc>https://{domain}/{l}/</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>')
+    for row in rows:
+        urls.append(f'  <url><loc>https://pillscamradar.com/scam/{row[0]}</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>')
         
-    if is_dating:
-        urls.append(f'  <url><loc>https://verifydating.net/scammers</loc><lastmod>{today}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>')
-        urls.append(f'  <url><loc>https://verifydating.net/widget</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>')
-        urls.append(f'  <url><loc>https://verifydating.net/api/v1/dating-docs</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>')
-            
-    if not is_dating:
-        urls.append(f'  <url><loc>https://{domain}/widget</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>')
-        urls.append(f'  <url><loc>https://{domain}/pricing</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>')
-        for b in ["interactive-brokers", "avatrade", "xm", "exness", "etoro", "plus500"]:
-            urls.append(f'  <url><loc>https://{domain}/reviews/{b}</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>')
-            for l in langs:
-                urls.append(f'  <url><loc>https://{domain}/{l}/reviews/{b}</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>')
-
     urls.append('</urlset>')
-    sitemap_content = '\n'.join(urls)
-    from fastapi.responses import Response
-    return Response(content=sitemap_content, media_type="application/xml")
-
+    return Response(content="
+".join(urls), media_type="application/xml")
 @app.get("/og_image.png")
 async def get_og_image():
     path = os.path.join("broker-verifier", "og_image.png")
