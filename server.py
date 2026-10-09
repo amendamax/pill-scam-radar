@@ -180,7 +180,7 @@ if os.path.exists("/var/data"):
 else:
     PERSISTENT_DIR = os.path.dirname(os.path.abspath(__file__))
 os.makedirs(PERSISTENT_DIR, exist_ok=True)
-DB_PATH = os.path.join(PERSISTENT_DIR, "database.db")
+DB_PATH = os.path.join(PERSISTENT_DIR, "scams.db")
 
 def get_db_connection(timeout=30.0):
     """
