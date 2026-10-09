@@ -460,7 +460,7 @@ def init_db():
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_scans_created ON scans(created_at);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_broker_scans_id ON broker_scans(id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_reg_scam_slug ON regulatory_scam_reports(slug);")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_reg_scam_domain ON regulatory_scam_reports(domain);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_reg_scam_domain_url ON regulatory_scam_reports(domain_url);")
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS crypto_votes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
