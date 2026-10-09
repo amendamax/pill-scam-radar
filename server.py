@@ -697,7 +697,68 @@ async def startup_event():
             # Sleep 7 days (604,800 seconds = 1 week)
             time.sleep(604800)
 
+
+    def _daily_fda_harvester():
+        import time, requests, re, sqlite3, datetime
+        time.sleep(60) # Wait for startup
+        while True:
+            try:
+                print("[Daily FDA Harvester] Checking for new drug recalls...")
+                today = datetime.datetime.now()
+                start_date = (today - datetime.timedelta(days=30)).strftime("%Y%m%d")
+                end_date = today.strftime("%Y%m%d")
+                
+                url = f'https://api.fda.gov/drug/enforcement.json?api_key=8dCXiLiJ007u4WJ1bPUHxNDcnsyyueNkS07iHJJW&search=report_date:[{start_date}+TO+{end_date}]&limit=1000'
+                resp = requests.get(url)
+                if resp.status_code == 200:
+                    data = resp.json().get('results', [])
+                    conn = sqlite3.connect(DB_PATH)
+                    c = conn.cursor()
+                    inserted = 0
+                    for item in data:
+                        recall_number = item.get('recall_number', '')
+                        if not recall_number: continue
+                        slug = recall_number.lower().replace(' ', '-').replace('/', '-')
+                        name_desc = item.get('product_description', 'Unknown Product')
+                        name_match = re.match(r'^([^,]+)', name_desc)
+                        name = name_match.group(1).strip()[:100] if name_match else name_desc[:100]
+                        category = "FDA Drug Recall"
+                        reason_text = item.get('reason_for_recall', '').lower()
+                        if "unapproved" in reason_text: category = "Unapproved Drug"
+                        if "tainted" in reason_text: category = "Tainted Product"
+                        if "dietary" in reason_text or "dietary" in name_desc.lower(): category = "Dietary Supplement"
+                        date_str = item.get('recall_initiation_date', '')
+                        date_fmt = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:]}" if date_str and len(date_str) == 8 else "Unknown"
+                        danger_level = "Medium"
+                        if item.get('classification', '') == 'Class I': danger_level = "Critical"
+                        active_ingredients = item.get('code_info', 'N/A')[:200]
+                        domain_url = f"FDA Recall #{recall_number}"
+                        try:
+                            c.execute('''
+                                INSERT INTO regulatory_scam_reports 
+                                (slug, entity_name, scam_type, severity_level, discovered_date, domain_url, regulator_warnings, status, description, last_updated)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            ''', (slug, name, category, danger_level, date_fmt, domain_url, active_ingredients, "Banned", item.get('reason_for_recall', ''), date_fmt))
+                            inserted += 1
+                        except sqlite3.IntegrityError:
+                            pass
+                    conn.commit()
+                    conn.close()
+                    if inserted > 0:
+                        print(f"[Daily FDA Harvester] Inserted {inserted} new pill scams into the database!")
+                        try:
+                            import urllib.request, json
+                            payload = {"host": "pillscamradar.com", "key": "d89b14f6824945e4a81b7e4521798361"}
+                            req = urllib.request.Request("https://api.indexnow.org/indexnow", data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
+                            urllib.request.urlopen(req, timeout=15)
+                        except Exception as e:
+                            pass
+            except Exception as e:
+                pass
+            time.sleep(86400)
+
     # threading.Thread(target=_seed, daemon=True).start()
+
     threading.Thread(target=_daily_fda_harvester, daemon=True).start()
     # threading.Thread(target=_weekly_dating_harvester, daemon=True).start()
 
