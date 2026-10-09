@@ -201,7 +201,7 @@ def ensure_database_unpacked():
     """
     Instant <1s unpack of the 14,663 brokers + 25,348 dating profiles master archive on boot.
     """
-    gz_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "database.db.gz")
+    gz_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "scams.db.gz")
     if os.path.exists(gz_file):
         if not os.path.exists(DB_PATH) or os.path.getsize(DB_PATH) < 1024 * 1024:
             print("[Database Engine] Unpacking pre-seeded master archive (7.5MB -> 64MB)...")
@@ -210,10 +210,10 @@ def ensure_database_unpacked():
                 with open(DB_PATH, "wb") as f_out:
                     shutil.copyfileobj(f_in, f_out)
             print("[Database Engine] Master archive successfully restored in <1s!")
-    elif not os.path.exists(DB_PATH) and os.path.exists("database.db"):
+    elif not os.path.exists(DB_PATH) and os.path.exists("scams.db"):
         try:
             import shutil
-            shutil.copy("database.db", DB_PATH)
+            shutil.copy("scams.db", DB_PATH)
         except Exception:
             pass
 
