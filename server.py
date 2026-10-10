@@ -773,6 +773,12 @@ async def startup_event():
             mhra_harvester.fetch_mhra_alerts()
             ema_harvester.fetch_ema_alerts()
             tga_harvester.fetch_tga_alerts()
+            try:
+                import google_indexer
+                google_indexer.run_indexer()
+                print('Daily indexing complete.')
+            except Exception as e:
+                print('Error in daily indexing:', e)
         except Exception as e:
             print('Global Harvester Error:', e)
         time.sleep(86400)
