@@ -130,19 +130,23 @@ async def add_performance_cache_headers(request: Request, call_next):
         
     # 3. Public SEO Landing Pages & Dossiers (GET/HEAD 200 OK only): 1 hour browser cache, 7 days Cloudflare edge cache
     elif request.method in ("GET", "HEAD") and response.status_code == 200:
-        if not path.startswith("/api/") and not path.startswith("/webhook"):
+        if not path.startswith("/webhook"):
             is_public_content = (
                 "/scammer/" in path
                 or "/scam-reports/" in path
                 or "/reviews/" in path
                 or path in ("/", "/ro", "/it", "/es", "/fr", "/de", "/pt", "/ru", "/brokers", "/scammers", "/promo")
                 or any(path == f"/{lang}" or path == f"/{lang}/" for lang in ("ro", "it", "es", "fr", "de", "pt", "ru"))
+                or path.startswith("/api/dating-scammers") 
+                or path.startswith("/api/v1/broker-check")
+                or path.startswith("/api/v1/pills")
+                or path.startswith("/api/v1/regulatory-warnings")
             )
             if is_public_content:
                 response.headers["Cache-Control"] = "public, max-age=3600, s-maxage=604800, stale-while-revalidate=86400"
 
-    # 4. Remove Vary: Origin on non-API routes so Cloudflare Edge Caches 100% of HTML/Assets without DYNAMIC bypass
-    if not path.startswith("/api/") and "vary" in response.headers:
+    # 4. Remove Vary: Origin so Cloudflare Edge Caches 100% of HTML/Assets/Public APIs
+    if not path.startswith("/webhook") and "vary" in response.headers:
         vary_items = [v.strip() for v in response.headers["vary"].split(",") if v.strip().lower() != "origin"]
         if vary_items:
             response.headers["vary"] = ", ".join(vary_items)
