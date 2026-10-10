@@ -764,9 +764,9 @@ async def startup_event():
     # threading.Thread(target=_seed, daemon=True).start()
 
     def _daily_global_harvester():
-    import fda_harvester, mhra_harvester, ema_harvester, tga_harvester, time
-    time.sleep(120)
-    while True:
+        import fda_harvester, mhra_harvester, ema_harvester, tga_harvester, time
+        time.sleep(120)
+        while True:
         try:
             print('[Global Harvester] Running EMA, MHRA, TGA, FDA')
             fda_harvester.fetch_fda_alerts()
