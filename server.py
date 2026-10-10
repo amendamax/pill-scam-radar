@@ -767,21 +767,21 @@ async def startup_event():
         import fda_harvester, mhra_harvester, ema_harvester, tga_harvester, time
         time.sleep(120)
         while True:
-        try:
-            print('[Global Harvester] Running EMA, MHRA, TGA, FDA')
-            fda_harvester.fetch_fda_alerts()
-            mhra_harvester.fetch_mhra_alerts()
-            ema_harvester.fetch_ema_alerts()
-            tga_harvester.fetch_tga_alerts()
             try:
-                import google_indexer
-                google_indexer.run_indexer()
-                print('Daily indexing complete.')
+                print('[Global Harvester] Running EMA, MHRA, TGA, FDA')
+                fda_harvester.fetch_fda_alerts()
+                mhra_harvester.fetch_mhra_alerts()
+                ema_harvester.fetch_ema_alerts()
+                tga_harvester.fetch_tga_alerts()
+                try:
+                    import google_indexer
+                    google_indexer.run_indexer()
+                    print('Daily indexing complete.')
+                except Exception as e:
+                    print('Error in daily indexing:', e)
             except Exception as e:
-                print('Error in daily indexing:', e)
-        except Exception as e:
-            print('Global Harvester Error:', e)
-        time.sleep(86400)
+                print('Global Harvester Error:', e)
+            time.sleep(86400)
 
     threading.Thread(target=_daily_fda_harvester, daemon=True).start()
     threading.Thread(target=_daily_global_harvester, daemon=True).start()
