@@ -763,7 +763,22 @@ async def startup_event():
 
     # threading.Thread(target=_seed, daemon=True).start()
 
+    def _daily_global_harvester():
+    import fda_harvester, mhra_harvester, ema_harvester, tga_harvester, time
+    time.sleep(120)
+    while True:
+        try:
+            print('[Global Harvester] Running EMA, MHRA, TGA, FDA')
+            fda_harvester.fetch_fda_alerts()
+            mhra_harvester.fetch_mhra_alerts()
+            ema_harvester.fetch_ema_alerts()
+            tga_harvester.fetch_tga_alerts()
+        except Exception as e:
+            print('Global Harvester Error:', e)
+        time.sleep(86400)
+
     threading.Thread(target=_daily_fda_harvester, daemon=True).start()
+    threading.Thread(target=_daily_global_harvester, daemon=True).start()
     # threading.Thread(target=_weekly_dating_harvester, daemon=True).start()
 
 # ==========================================================================
