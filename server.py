@@ -1242,7 +1242,7 @@ async def get_pill_scam_page(slug: str):
         <title>FDA/MHRA Alert: {row[0]} - {row[2]}</title>
         <meta name="description" content="Official Recall & Alert for {row[0]}: {row[6][:150]}...">
         <style>
-            body {{ font-family: system-ui, -apple-system, sans-serif; background: linear-gradient(to bottom, rgba(2,6,23,0.7), rgba(2,6,23,0.95)), url('/pill_bg.jpg') center top / cover fixed; color: #f8fafc; margin: 0; padding: 0; }}
+            body {{ font-family: system-ui, -apple-system, sans-serif; background: linear-gradient(to bottom, rgba(2,6,23,0.7), rgba(2,6,23,0.95)), url('/uploads/pill_bg.jpg') center top / cover fixed; color: #f8fafc; margin: 0; padding: 0; }}
             header {{ background-color: rgba(15,23,42,0.9); padding: 20px; text-align: center; border-bottom: 1px solid #1e293b; }}
             header h1 {{ margin: 0; font-size: 28px; color: #38bdf8; }}
             header a {{ color: #38bdf8; text-decoration: none; }}
@@ -10516,7 +10516,7 @@ async def get_pill_directory_page(page: int):
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Pill & Supplement Alert Directory - Page {page}</title>
         <style>
-            body {{ font-family: system-ui, -apple-system, sans-serif; background: linear-gradient(to bottom, rgba(2,6,23,0.7), rgba(2,6,23,0.95)), url('/pill_bg.jpg') center top / cover fixed; color: #f8fafc; margin: 0; padding: 0; }}
+            body {{ font-family: system-ui, -apple-system, sans-serif; background: linear-gradient(to bottom, rgba(2,6,23,0.7), rgba(2,6,23,0.95)), url('/uploads/pill_bg.jpg') center top / cover fixed; color: #f8fafc; margin: 0; padding: 0; }}
             header {{ background-color: rgba(15,23,42,0.9); padding: 20px; text-align: center; border-bottom: 1px solid #1e293b; }}
             header h1 {{ margin: 0; font-size: 28px; color: #38bdf8; }}
             header a {{ color: #38bdf8; text-decoration: none; }}
