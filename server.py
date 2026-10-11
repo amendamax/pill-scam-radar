@@ -1299,11 +1299,7 @@ async def get_pill_scam_page(slug: str):
             </div>
 
             <div class="affiliate-section">
-                <div class="aff-card legal">
-                    <h4>⚖️ Injured by this product?</h4>
-                    <p>If you or a loved one suffered adverse health effects after using tainted supplements, you might be entitled to financial compensation through a class-action lawsuit.</p>
-                    <a href="https://example.com/lawsuit-eval" target="_blank" rel="sponsored noopener">Get a Free Legal Evaluation</a>
-                </div>
+                
                 <div class="aff-card health">
                     <h4>🌿 Looking for Safe Alternatives?</h4>
                     <p>Stop risking your health with unapproved drugs. Discover 100% FDA-compliant, third-party tested alternatives.</p>
