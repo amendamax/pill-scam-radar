@@ -1242,7 +1242,7 @@ async def get_pill_scam_page(slug: str):
         <title>FDA/MHRA Alert: {row[0]} - {row[2]}</title>
         <meta name="description" content="Official Recall & Alert for {row[0]}: {row[6][:150]}...">
         <style>
-            body {{ font-family: system-ui, -apple-system, sans-serif; background: linear-gradient(to bottom, rgba(2,6,23,0.3), rgba(2,6,23,0.8)), url('/uploads/pill_bg.jpg?v=4') center top / cover fixed; color: #f8fafc; margin: 0; padding: 0; }}
+            body {{ font-family: system-ui, -apple-system, sans-serif; background: linear-gradient(to bottom, rgba(2,6,23,0.3), rgba(2,6,23,0.5)), url('/uploads/pill_bg.jpg?v=4') center top / cover fixed; color: #f8fafc; margin: 0; padding: 0; }}
             header {{ background-color: rgba(15,23,42,0.9); padding: 20px; text-align: center; border-bottom: 1px solid #1e293b; }}
             header h1 {{ margin: 0; font-size: 28px; color: #38bdf8; }}
             header a {{ color: #38bdf8; text-decoration: none; }}
@@ -10516,7 +10516,7 @@ async def get_pill_directory_page(page: int):
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Pill & Supplement Alert Directory - Page {page}</title>
         <style>
-            body {{ font-family: system-ui, -apple-system, sans-serif; background: linear-gradient(to bottom, rgba(2,6,23,0.3), rgba(2,6,23,0.8)), url('/uploads/pill_bg.jpg?v=4') center top / cover fixed; color: #f8fafc; margin: 0; padding: 0; }}
+            body {{ font-family: system-ui, -apple-system, sans-serif; background: linear-gradient(to bottom, rgba(2,6,23,0.3), rgba(2,6,23,0.5)), url('/uploads/pill_bg.jpg?v=4') center top / cover fixed; color: #f8fafc; margin: 0; padding: 0; }}
             header {{ background-color: rgba(15,23,42,0.9); padding: 20px; text-align: center; border-bottom: 1px solid #1e293b; }}
             header h1 {{ margin: 0; font-size: 28px; color: #38bdf8; }}
             header a {{ color: #38bdf8; text-decoration: none; }}
@@ -10529,10 +10529,10 @@ async def get_pill_directory_page(page: int):
             <p style="color: #94a3b8;">Official Directory - Page {page} of {total_pages}</p>
         </header>
         <div class="container">
-            {{items_html}}
+            {items_html}
             <div style="margin-top: 30px; text-align: center;">
-                {{prev_link}}
-                {{next_link}}
+                {prev_link}
+                {next_link}
             </div>
         </div>
     <footer class="vasiledev-ecosystem-footer" style="background: #03060a; border-top: 1px solid rgba(255, 255, 255, 0.1); padding: 50px 20px 24px; font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #94a3b8; font-size: 0.85rem; line-height: 1.6; text-align: left; margin-top: 60px;">
@@ -10582,7 +10582,7 @@ async def get_pill_directory_page(page: int):
 </footer>
     </body>
     </html>
-    """.replace("{{items_html}}", items_html).replace("{{prev_link}}", prev_link).replace("{{next_link}}", next_link)
+    """.replace("{items_html}", items_html).replace("{prev_link}", prev_link).replace("{next_link}", next_link)
     return HTMLResponse(html)
 
 @app.get("/directory/{category}/{letter}")
