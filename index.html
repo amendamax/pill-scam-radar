@@ -212,36 +212,37 @@
             
             try {
                 const offset = (page - 1) * limit;
-                const res = await fetch(/api/v1/pills?search=&limit=&offset=);
+                const res = await fetch(`/api/v1/pills?search=${encodeURIComponent(search)}&limit=${limit}&offset=${offset}`);
                 const data = await res.json();
                 
                 if (data.results.length === 0) {
-                    tbody.innerHTML = <tr><td colspan="5" style="text-align: center; padding: 2rem;">No results found.</td></tr>;
-                    paginationDiv.innerHTML = '';
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 2rem;">No results found.</td></tr>`;
+                    if (paginationDiv) paginationDiv.innerHTML = '';
                     return;
                 }
                 
                 let html = '';
                 data.results.forEach(item => {
                     let badgeClass = item.severity_level.toLowerCase();
-                    html += 
+                    html += `
                         <tr>
-                            <td style="white-space: nowrap;"></td>
-                            <td><a href="/scam/" style="text-decoration: none;"><span class="firm-name"></span></a><br><small></small></td>
-                            <td class="description"><strong></strong><br></td>
-                            <td><span class="badge "></span></td>
-                            <td><strong style="color: #d9534f;"></strong></td>
+                            <td style="white-space: nowrap;">${item.discovered_date}</td>
+                            <td><a href="/scam/${item.slug}" style="text-decoration: none;"><span class="firm-name">${item.entity_name}</span></a><br><small>${item.domain_url}</small></td>
+                            <td class="description"><strong>${item.scam_type}</strong><br>${item.description}</td>
+                            <td><span class="badge ${badgeClass}">${item.severity_level}</span></td>
+                            <td><strong style="color: #d9534f;">${item.status}</strong></td>
                         </tr>
-                    ;
+                    `;
                 });
                 tbody.innerHTML = html;
                 
                 // Render Google-style Pagination
                 const totalPages = Math.ceil(data.total / limit);
-                renderPagination(totalPages, search);
+                if (paginationDiv) renderPagination(totalPages, search);
                 
             } catch (err) {
-                tbody.innerHTML = <tr><td colspan="5" style="text-align: center; padding: 2rem; color: red;">Error loading data.</td></tr>;
+                console.error(err);
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #f87171;">Error loading data. Check console.</td></tr>`;
             }
         }
         
@@ -256,14 +257,13 @@
             
             // Previous Button
             if (currentPage > 1) {
-                html += <button onclick="loadData('', )" style="background: transparent; color: #38bdf8; border: none; cursor: pointer; font-size: 16px; font-weight: bold; margin-right: 15px;">&lsaquo; Prev</button>;
+                html += `<button onclick="loadData('${search.replace(/'/g, "\\'")}', ${currentPage - 1})" style="background: transparent; color: #38bdf8; border: none; cursor: pointer; font-size: 16px; font-weight: bold; margin-right: 15px;">&lsaquo; Prev</button>`;
             }
             
-            // Page Numbers (Google Style - show a window around current page)
+            // Page Numbers
             let startPage = Math.max(1, currentPage - 5);
             let endPage = Math.min(totalPages, currentPage + 4);
             
-            // Adjust window if we are near the ends
             if (endPage - startPage < 9) {
                 if (startPage === 1) endPage = Math.min(totalPages, 10);
                 else if (endPage === totalPages) startPage = Math.max(1, totalPages - 9);
@@ -271,15 +271,15 @@
             
             for (let i = startPage; i <= endPage; i++) {
                 if (i === currentPage) {
-                    html += <span style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: rgba(56,189,248,0.2); color: #38bdf8; border-radius: 50%; font-weight: bold; cursor: default;"></span>;
+                    html += `<span style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: rgba(56,189,248,0.2); color: #38bdf8; border-radius: 50%; font-weight: bold; cursor: default;">${i}</span>`;
                 } else {
-                    html += <button onclick="loadData('', )" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: transparent; color: #94a3b8; border: none; cursor: pointer; font-weight: bold; border-radius: 50%; hover: {color: #fff;}"></button>;
+                    html += `<button onclick="loadData('${search.replace(/'/g, "\\'")}', ${i})" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: transparent; color: #94a3b8; border: none; cursor: pointer; font-weight: bold; border-radius: 50%;">${i}</button>`;
                 }
             }
             
             // Next Button
             if (currentPage < totalPages) {
-                html += <button onclick="loadData('', )" style="background: transparent; color: #38bdf8; border: none; cursor: pointer; font-size: 16px; font-weight: bold; margin-left: 15px;">Next &rsaquo;</button>;
+                html += `<button onclick="loadData('${search.replace(/'/g, "\\'")}', ${currentPage + 1})" style="background: transparent; color: #38bdf8; border: none; cursor: pointer; font-size: 16px; font-weight: bold; margin-left: 15px;">Next &rsaquo;</button>`;
             }
             
             container.innerHTML = html;
@@ -293,7 +293,5 @@
             }, 300);
         }
 
-        // Initial load
         window.onload = () => loadData();
     </script>
-
