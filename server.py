@@ -181,6 +181,14 @@ async def debug_import_error():
 import platform
 if os.path.exists("/var/data"):
     PERSISTENT_DIR = "/var/data"
+    # Auto-sync Git database to Persistent Disk if Git version is larger
+    local_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), "scams.db")
+    persistent_db = os.path.join(PERSISTENT_DIR, "scams.db")
+    if os.path.exists(local_db):
+        import shutil
+        if not os.path.exists(persistent_db) or os.path.getsize(local_db) > os.path.getsize(persistent_db):
+            print("Syncing updated SQLite DB from Git to Persistent Disk...")
+            shutil.copy2(local_db, persistent_db)
 else:
     PERSISTENT_DIR = os.path.dirname(os.path.abspath(__file__))
 os.makedirs(PERSISTENT_DIR, exist_ok=True)
