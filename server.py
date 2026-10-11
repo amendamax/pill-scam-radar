@@ -156,6 +156,28 @@ async def add_performance_cache_headers(request: Request, call_next):
     return response
 
 
+
+@app.get("/admin/force-sync-db")
+async def force_sync_db(secret: str):
+    if secret != "vasile2026":
+        return HTMLResponse("Unauthorized", status_code=403)
+    try:
+        import urllib.request
+        # URL to the raw file in the github repo
+        url = "https://raw.githubusercontent.com/amendamax/pill-scam-radar/main/scams.db"
+        urllib.request.urlretrieve(url, DB_PATH)
+        
+        # Verify
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT COUNT(*) FROM regulatory_scam_reports")
+        cnt = c.fetchone()[0]
+        conn.close()
+        
+        return HTMLResponse(f"<h1>Success! DB overwritten from GitHub. New count: {cnt}</h1>")
+    except Exception as e:
+        return HTMLResponse(f"<h1>Error: {str(e)}</h1>", status_code=500)
+
 @app.get("/api/debug/import-error")
 async def debug_import_error():
     import sys
