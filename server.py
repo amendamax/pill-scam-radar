@@ -10479,6 +10479,112 @@ async def get_dating_directory(request: Request):
     return HTMLResponse(content=generate_az_page("Dating Scams Directory (A-Z)", "/directory/dating"))
 
 
+@app.get("/directory/pills/{page}")
+async def get_pill_directory_page(page: int):
+    per_page = 100
+    offset = (page - 1) * per_page
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT slug, entity_name, domain_url, scam_type, severity_level, discovered_date FROM regulatory_scam_reports ORDER BY discovered_date DESC LIMIT ? OFFSET ?", (per_page, offset))
+    rows = cursor.fetchall()
+    
+    cursor.execute("SELECT COUNT(*) FROM regulatory_scam_reports")
+    total_count = cursor.fetchone()[0]
+    conn.close()
+    
+    if not rows and page != 1:
+        return HTMLResponse("<h1>404 Not Found</h1>", status_code=404)
+        
+    total_pages = (total_count + per_page - 1) // per_page
+    
+    items_html = ""
+    for r in rows:
+        items_html += f"""
+        <div style="background: rgba(15,23,42,0.9); border: 1px solid #1e293b; border-radius: 8px; padding: 20px; margin-bottom: 15px;">
+            <a href="/scam/{r[0]}" style="color: #38bdf8; text-decoration: none; font-size: 18px; font-weight: bold;">{r[1]}</a>
+            <p style="color: #94a3b8; font-size: 14px; margin: 5px 0;">ID: {r[2]} | Type: {r[3]} | Risk: {r[4]} | Date: {r[5]}</p>
+        </div>"""
+        
+    prev_link = f'<a href="/directory/pills/{page-1}" style="color: #10b981; margin-right: 20px;">&larr; Previous Page</a>' if page > 1 else ''
+    next_link = f'<a href="/directory/pills/{page+1}" style="color: #10b981;">Next Page &rarr;</a>' if page < total_pages else ''
+        
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Pill & Supplement Alert Directory - Page {page}</title>
+        <style>
+            body {{ font-family: system-ui, -apple-system, sans-serif; background-color: #020617; color: #f8fafc; margin: 0; padding: 0; }}
+            header {{ background-color: rgba(15,23,42,0.9); padding: 20px; text-align: center; border-bottom: 1px solid #1e293b; }}
+            header h1 {{ margin: 0; font-size: 28px; color: #38bdf8; }}
+            header a {{ color: #38bdf8; text-decoration: none; }}
+            .container {{ max-width: 1000px; margin: 40px auto; padding: 0 20px; }}
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1><a href="/">PILLSCAM<span style="color: #10b981;">RADAR</span></a></h1>
+            <p style="color: #94a3b8;">Official Directory - Page {page} of {total_pages}</p>
+        </header>
+        <div class="container">
+            {{items_html}}
+            <div style="margin-top: 30px; text-align: center;">
+                {{prev_link}}
+                {{next_link}}
+            </div>
+        </div>
+    <footer class="vasiledev-ecosystem-footer" style="background: #03060a; border-top: 1px solid rgba(255, 255, 255, 0.1); padding: 50px 20px 24px; font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #94a3b8; font-size: 0.85rem; line-height: 1.6; text-align: left; margin-top: 60px;">
+        <div style="max-width: 1140px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 36px; margin-bottom: 36px;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 8px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 16px;">
+                        <i class="fa-solid fa-pills"></i>
+                    </span>
+                    <span style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 800; color: #ffffff; letter-spacing: -0.3px;">
+                        PILLSCAM<strong style="color: #38bdf8;">RADAR</strong>
+                    </span>
+                </div>
+                <p style="color: #94a3b8; font-size: 0.85rem; line-height: 1.5; margin: 0 0 12px 0;">
+                    Healthcare intelligence platform. Detecting fake supplements and FDA-banned dangerous weight-loss & enhancement pills.
+                </p>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span style="background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px;">✔️ VIES Verified EU</span>
+                    <span style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px;">🛡️ 100% Free Public Utility</span>
+                </div>
+            </div>
+
+            <div>
+                <h4 style="font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 700; color: #38bdf8; margin: 0 0 14px 0;">VasileDev Group Ecosystem</h4>
+                <p style="margin: 0 0 8px 0; color: #cbd5e1; font-size: 0.85rem;">VAT / P.IVA: <code style="background: rgba(255, 255, 255, 0.1); color: #38bdf8; padding: 2px 6px; border-radius: 4px; font-family: monospace;">IT04226190041</code></p>
+                <p style="margin: 0 0 8px 0; color: #94a3b8; font-size: 0.85rem;">Locations: Garessio (CN), Italy &amp; Odobești, Romania</p>
+                <p style="margin: 0; color: #94a3b8; font-size: 0.85rem;">Direct: <a href="mailto:amendamax@vasiledev.com" style="color: #cbd5e1; text-decoration: none;">amendamax@vasiledev.com</a></p>
+            </div>
+
+            <div>
+                <h4 style="font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 700; color: #38bdf8; margin: 0 0 14px 0;">Official Network</h4>
+                <p style="margin: 0 0 8px 0;"><a href="https://isbrokersafe.com" target="_blank" rel="noopener" style="color: #cbd5e1; font-weight: 400; text-decoration: none;">🏦 IsBrokerSafe.com</a></p>
+                <p style="margin: 0 0 8px 0;"><a href="https://jobscamradar.com" target="_blank" rel="noopener" style="color: #cbd5e1; font-weight: 400; text-decoration: none;">🛡️ JobScamRadar.com</a></p>
+                <p style="margin: 0 0 8px 0;"><a href="https://pillscamradar.com" target="_blank" rel="noopener" style="color: #38bdf8; font-weight: 700; text-decoration: none;">💊 PillScamRadar.com</a></p>
+                <p style="margin: 0 0 8px 0;"><a href="https://verifydating.net" target="_blank" rel="noopener" style="color: #cbd5e1; font-weight: 400; text-decoration: none;">🛡️ VerifyDating.net</a></p>
+                <p style="margin: 0 0 8px 0;"><a href="https://appscamradar.com" target="_blank" rel="noopener" style="color: #cbd5e1; font-weight: 400; text-decoration: none;">🐛 AppScamRadar.com</a></p>
+                <p style="margin: 0 0 8px 0;"><a href="https://dreamcarhunt.com" target="_blank" rel="noopener" style="color: #cbd5e1; text-decoration: none;">🏎️ DreamCarHunt.com</a></p>
+                <p style="margin: 0 0 8px 0;"><a href="https://airparkrefund.com" target="_blank" rel="noopener" style="color: #cbd5e1; text-decoration: none;">✈️ AirParkRefund.com</a></p>
+                <p style="margin: 0;"><a href="https://vasiledev.com" target="_blank" rel="noopener" style="color: #cbd5e1; text-decoration: none;">👑 VasileDev.com</a></p>
+            </div>
+        </div>
+
+        <div style="max-width: 1140px; margin: 0 auto; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 20px; text-align: center; font-size: 0.8rem; color: #64748b;">
+            <p style="margin: 0;">&copy; 2026 PillScamRadar™ by VasileDev Group. All rights reserved. Powered globally by Cloudflare Edge Network.</p>
+        </div>
+    <div style="text-align: center; margin: 40px 0;"><a href="/directory/pills/1" style="color: #38bdf8; text-decoration: none; font-weight: bold;">Browse Full Directory (For SEO)</a></div>
+</footer>
+    </body>
+    </html>
+    """.replace("{{items_html}}", items_html).replace("{{prev_link}}", prev_link).replace("{{next_link}}", next_link)
+    return HTMLResponse(html)
+
 @app.get("/directory/{category}/{letter}")
 async def get_directory_letter_page(request: Request, category: str, letter: str, page: int = 1):
     host = request.headers.get("host", "").lower()
@@ -10611,111 +10717,7 @@ async def get_directory_letter_page(request: Request, category: str, letter: str
 
 
 
-@app.get("/directory/pills/{page}")
-async def get_pill_directory_page(page: int):
-    per_page = 100
-    offset = (page - 1) * per_page
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT slug, entity_name, domain_url, scam_type, severity_level, discovered_date FROM regulatory_scam_reports ORDER BY discovered_date DESC LIMIT ? OFFSET ?", (per_page, offset))
-    rows = cursor.fetchall()
-    
-    cursor.execute("SELECT COUNT(*) FROM regulatory_scam_reports")
-    total_count = cursor.fetchone()[0]
-    conn.close()
-    
-    if not rows and page != 1:
-        return HTMLResponse("<h1>404 Not Found</h1>", status_code=404)
-        
-    total_pages = (total_count + per_page - 1) // per_page
-    
-    items_html = ""
-    for r in rows:
-        items_html += f"""
-        <div style="background: rgba(15,23,42,0.9); border: 1px solid #1e293b; border-radius: 8px; padding: 20px; margin-bottom: 15px;">
-            <a href="/scam/{r[0]}" style="color: #38bdf8; text-decoration: none; font-size: 18px; font-weight: bold;">{r[1]}</a>
-            <p style="color: #94a3b8; font-size: 14px; margin: 5px 0;">ID: {r[2]} | Type: {r[3]} | Risk: {r[4]} | Date: {r[5]}</p>
-        </div>"""
-        
-    prev_link = f'<a href="/directory/pills/{page-1}" style="color: #10b981; margin-right: 20px;">&larr; Previous Page</a>' if page > 1 else ''
-    next_link = f'<a href="/directory/pills/{page+1}" style="color: #10b981;">Next Page &rarr;</a>' if page < total_pages else ''
-        
-    html = f"""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Pill & Supplement Alert Directory - Page {page}</title>
-        <style>
-            body {{ font-family: system-ui, -apple-system, sans-serif; background-color: #020617; color: #f8fafc; margin: 0; padding: 0; }}
-            header {{ background-color: rgba(15,23,42,0.9); padding: 20px; text-align: center; border-bottom: 1px solid #1e293b; }}
-            header h1 {{ margin: 0; font-size: 28px; color: #38bdf8; }}
-            header a {{ color: #38bdf8; text-decoration: none; }}
-            .container {{ max-width: 1000px; margin: 40px auto; padding: 0 20px; }}
-        </style>
-    </head>
-    <body>
-        <header>
-            <h1><a href="/">PILLSCAM<span style="color: #10b981;">RADAR</span></a></h1>
-            <p style="color: #94a3b8;">Official Directory - Page {page} of {total_pages}</p>
-        </header>
-        <div class="container">
-            {{items_html}}
-            <div style="margin-top: 30px; text-align: center;">
-                {{prev_link}}
-                {{next_link}}
-            </div>
-        </div>
-    <footer class="vasiledev-ecosystem-footer" style="background: #03060a; border-top: 1px solid rgba(255, 255, 255, 0.1); padding: 50px 20px 24px; font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #94a3b8; font-size: 0.85rem; line-height: 1.6; text-align: left; margin-top: 60px;">
-        <div style="max-width: 1140px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 36px; margin-bottom: 36px;">
-            <div>
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 8px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 16px;">
-                        <i class="fa-solid fa-pills"></i>
-                    </span>
-                    <span style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 800; color: #ffffff; letter-spacing: -0.3px;">
-                        PILLSCAM<strong style="color: #38bdf8;">RADAR</strong>
-                    </span>
-                </div>
-                <p style="color: #94a3b8; font-size: 0.85rem; line-height: 1.5; margin: 0 0 12px 0;">
-                    Healthcare intelligence platform. Detecting fake supplements and FDA-banned dangerous weight-loss & enhancement pills.
-                </p>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <span style="background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px;">✔️ VIES Verified EU</span>
-                    <span style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px;">🛡️ 100% Free Public Utility</span>
-                </div>
-            </div>
 
-            <div>
-                <h4 style="font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 700; color: #38bdf8; margin: 0 0 14px 0;">VasileDev Group Ecosystem</h4>
-                <p style="margin: 0 0 8px 0; color: #cbd5e1; font-size: 0.85rem;">VAT / P.IVA: <code style="background: rgba(255, 255, 255, 0.1); color: #38bdf8; padding: 2px 6px; border-radius: 4px; font-family: monospace;">IT04226190041</code></p>
-                <p style="margin: 0 0 8px 0; color: #94a3b8; font-size: 0.85rem;">Locations: Garessio (CN), Italy &amp; Odobești, Romania</p>
-                <p style="margin: 0; color: #94a3b8; font-size: 0.85rem;">Direct: <a href="mailto:amendamax@vasiledev.com" style="color: #cbd5e1; text-decoration: none;">amendamax@vasiledev.com</a></p>
-            </div>
-
-            <div>
-                <h4 style="font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 700; color: #38bdf8; margin: 0 0 14px 0;">Official Network</h4>
-                <p style="margin: 0 0 8px 0;"><a href="https://isbrokersafe.com" target="_blank" rel="noopener" style="color: #cbd5e1; font-weight: 400; text-decoration: none;">🏦 IsBrokerSafe.com</a></p>
-                <p style="margin: 0 0 8px 0;"><a href="https://jobscamradar.com" target="_blank" rel="noopener" style="color: #cbd5e1; font-weight: 400; text-decoration: none;">🛡️ JobScamRadar.com</a></p>
-                <p style="margin: 0 0 8px 0;"><a href="https://pillscamradar.com" target="_blank" rel="noopener" style="color: #38bdf8; font-weight: 700; text-decoration: none;">💊 PillScamRadar.com</a></p>
-                <p style="margin: 0 0 8px 0;"><a href="https://verifydating.net" target="_blank" rel="noopener" style="color: #cbd5e1; font-weight: 400; text-decoration: none;">🛡️ VerifyDating.net</a></p>
-                <p style="margin: 0 0 8px 0;"><a href="https://appscamradar.com" target="_blank" rel="noopener" style="color: #cbd5e1; font-weight: 400; text-decoration: none;">🐛 AppScamRadar.com</a></p>
-                <p style="margin: 0 0 8px 0;"><a href="https://dreamcarhunt.com" target="_blank" rel="noopener" style="color: #cbd5e1; text-decoration: none;">🏎️ DreamCarHunt.com</a></p>
-                <p style="margin: 0 0 8px 0;"><a href="https://airparkrefund.com" target="_blank" rel="noopener" style="color: #cbd5e1; text-decoration: none;">✈️ AirParkRefund.com</a></p>
-                <p style="margin: 0;"><a href="https://vasiledev.com" target="_blank" rel="noopener" style="color: #cbd5e1; text-decoration: none;">👑 VasileDev.com</a></p>
-            </div>
-        </div>
-
-        <div style="max-width: 1140px; margin: 0 auto; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 20px; text-align: center; font-size: 0.8rem; color: #64748b;">
-            <p style="margin: 0;">&copy; 2026 PillScamRadar™ by VasileDev Group. All rights reserved. Powered globally by Cloudflare Edge Network.</p>
-        </div>
-    <div style="text-align: center; margin: 40px 0;"><a href="/directory/pills/1" style="color: #38bdf8; text-decoration: none; font-weight: bold;">Browse Full Directory (For SEO)</a></div>
-</footer>
-    </body>
-    </html>
-    """.replace("{{items_html}}", items_html).replace("{{prev_link}}", prev_link).replace("{{next_link}}", next_link)
-    return HTMLResponse(html)
 
 @app.get("/api/v1/pills")
 async def api_v1_pills(search: str = "", limit: int = 50, offset: int = 0):
