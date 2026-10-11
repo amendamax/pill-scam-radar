@@ -1307,7 +1307,7 @@ async def get_pill_scam_page(slug: str):
                 <div class="aff-card health">
                     <h4>🌿 Looking for Safe Alternatives?</h4>
                     <p>Stop risking your health with unapproved drugs. Discover 100% FDA-compliant, third-party tested alternatives.</p>
-                    <a href="https://healthbuy.com/collections/all?bg_ref=giNiA8PB3v" target="_blank" rel="sponsored noopener">View Verified Safe Supplements</a>
+                    <a href="https://health-beauty-healthbuy.myshopify.com?bg_ref=giNiA8PB3v" target="_blank" rel="sponsored noopener">View Verified Safe Supplements</a>
                 </div>
                 <p style="text-align: center; font-size: 12px; color: #64748b; margin-top: 10px;">Disclosure: Sponsored links help keep this database free to the public.</p>
             </div>
