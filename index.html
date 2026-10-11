@@ -8,19 +8,20 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --bg-color: #f4f7f6;
-            --text-color: #2c3e50;
-            --primary-color: #008f68; /* Medical Green */
-            --secondary-color: #0056b3; /* Clinical Blue */
-            --danger-color: #d9534f;
-            --warning-color: #f0ad4e;
-            --card-bg: #ffffff;
-            --border-color: #e0e6ed;
-            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --bg-color: #020617;
+            --text-color: #f8fafc;
+            --primary-color: #0f172a; 
+            --secondary-color: #1e293b;
+            --accent-color: #38bdf8;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --card-bg: rgba(15,23,42,0.8);
+            --border-color: #1e293b;
+            --font-family: system-ui, -apple-system, sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
+            background: linear-gradient(to bottom, rgba(2,6,23,0.7), rgba(2,6,23,0.95)), url('/dev_bg.webp') center top / cover fixed;
             color: var(--text-color);
             font-family: var(--font-family);
             margin: 0;
@@ -29,11 +30,11 @@
         }
 
         header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            background: rgba(15,23,42,0.9);
             color: white;
             padding: 2rem 1rem;
             text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-bottom: 1px solid var(--border-color);
         }
 
         header h1 {
@@ -44,14 +45,14 @@
 
         header p {
             font-size: 1.2rem;
-            opacity: 0.9;
+            color: #94a3b8;
             margin-top: 10px;
         }
 
         .container {
             max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
+            margin: 2rem auto;
+            padding: 0 1rem;
         }
 
         .search-box {
@@ -65,22 +66,21 @@
             max-width: 600px;
             padding: 1rem 1.5rem;
             font-size: 1.1rem;
-            border: 2px solid var(--border-color);
-            border-radius: 30px;
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
             outline: none;
-            transition: border-color 0.3s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-
-        .search-box input:focus {
-            border-color: var(--primary-color);
+            background: rgba(15,23,42,0.9);
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
 
         .table-wrapper {
             background: var(--card-bg);
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             overflow-x: auto;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(5px);
         }
 
         table {
@@ -90,27 +90,31 @@
         }
 
         th, td {
-            padding: 1rem 1.5rem;
+            padding: 1rem;
             border-bottom: 1px solid var(--border-color);
         }
 
         th {
-            background-color: #f8fafc;
+            background-color: rgba(30,41,59,0.8);
+            color: #94a3b8;
             font-weight: 600;
-            color: var(--secondary-color);
             text-transform: uppercase;
             font-size: 0.85rem;
             letter-spacing: 0.5px;
         }
 
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
         tr:hover {
-            background-color: #f1f5f9;
+            background-color: rgba(255,255,255,0.02);
         }
 
         .badge {
             display: inline-block;
-            padding: 0.35rem 0.75rem;
-            border-radius: 20px;
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
             font-size: 0.75rem;
             font-weight: bold;
             color: white;
@@ -119,16 +123,22 @@
 
         .badge.critical { background-color: var(--danger-color); }
         .badge.high { background-color: var(--warning-color); }
-        .badge.medium { background-color: var(--secondary-color); }
+        .badge.medium { background-color: #3b82f6; }
+        .badge.low { background-color: #10b981; }
 
         .firm-name {
-            font-weight: bold;
-            color: var(--primary-color);
+            font-weight: 600;
+            color: var(--accent-color);
+            font-size: 1.1rem;
+        }
+        
+        .firm-name:hover {
+            text-decoration: underline;
         }
 
         .description {
             font-size: 0.9rem;
-            color: #555;
+            color: #cbd5e1;
             max-width: 400px;
         }
 
@@ -155,7 +165,7 @@
 <body>
 
     <header>
-        <h1><i class="fa-solid fa-capsules"></i> PillScamRadar</h1>
+        <h1><i class="fa-solid fa-capsules" style="color: #10b981;"></i> PILLSCAM<span style="color: #10b981;">RADAR</span></h1>
         <p>Official FDA Database of Tainted Supplements & Unapproved Drugs</p>
     </header>
 
@@ -278,7 +288,8 @@
         <div style="max-width: 1140px; margin: 0 auto; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 20px; text-align: center; font-size: 0.8rem; color: #64748b;">
             <p style="margin: 0;">&copy; 2026 PillScamRadar™ by VasileDev Group. All rights reserved. Powered globally by Cloudflare Edge Network.</p>
         </div>
-    </footer>
+    <div style="text-align: center; margin: 40px 0;"><a href="/directory/pills/1" style="color: #38bdf8; text-decoration: none; font-weight: bold;">Browse Full Directory (For SEO)</a></div>
+</footer>
 
 
 

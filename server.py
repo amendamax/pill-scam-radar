@@ -1223,57 +1223,99 @@ async def get_indexnow_key():
 async def get_pill_scam_page(slug: str):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('''
-        SELECT entity_name, domain_url, scam_type, severity_level, status, description, discovered_date 
+    cursor.execute("""
+        SELECT entity_name, domain_url, scam_type, severity_level, status, regulator_warnings, description, discovered_date 
         FROM regulatory_scam_reports WHERE slug = ?
-    ''', (slug,))
+    """, (slug,))
     row = cursor.fetchone()
     conn.close()
     
     if not row:
         return HTMLResponse("<h1>404 Not Found</h1>", status_code=404)
         
-    html = f'''
+    html = f"""
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>FDA Warning: {row[0]} - {row[2]}</title>
-        <meta name="description" content="Official FDA Recall for {row[0]}: {row[5][:150]}...">
+        <title>FDA/MHRA Alert: {row[0]} - {row[2]}</title>
+        <meta name="description" content="Official Recall & Alert for {row[0]}: {row[6][:150]}...">
         <style>
-            body {{ font-family: 'Segoe UI', sans-serif; background: #f4f7f6; color: #333; padding: 2rem; max-width: 800px; margin: 0 auto; }}
-            .card {{ background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }}
-            h1 {{ color: #008f68; border-bottom: 2px solid #008f68; padding-bottom: 10px; }}
-            .badge {{ display: inline-block; padding: 0.5rem 1rem; border-radius: 20px; font-weight: bold; color: white; background: #d9534f; margin-bottom: 1rem; }}
-            p {{ font-size: 1.1rem; line-height: 1.6; }}
-            a.back {{ display: inline-block; margin-top: 2rem; color: #0056b3; text-decoration: none; font-weight: bold; }}
-            a.back:hover {{ text-decoration: underline; }}
+            body {{ font-family: system-ui, -apple-system, sans-serif; background-color: #020617; color: #f8fafc; margin: 0; padding: 0; }}
+            header {{ background-color: rgba(15,23,42,0.9); padding: 20px; text-align: center; border-bottom: 1px solid #1e293b; }}
+            header h1 {{ margin: 0; font-size: 28px; color: #38bdf8; }}
+            header a {{ color: #38bdf8; text-decoration: none; }}
+            .container {{ max-width: 1000px; margin: 40px auto; padding: 0 20px; }}
+            .dossier {{ background: rgba(15,23,42,0.9); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }}
+            .header-dossier {{ border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; margin-bottom: 20px; }}
+            .header-dossier h1 {{ margin: 0 0 10px 0; font-size: 32px; color: #f8fafc; }}
+            .badge {{ display: inline-block; font-size: 14px; font-weight: bold; padding: 5px 12px; border-radius: 6px; margin-bottom: 10px; color: white; background-color: #ef4444; }}
+            .badge.high {{ background-color: #f59e0b; }}
+            .details-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }}
+            .detail-item {{ background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }}
+            .detail-item strong {{ color: #94a3b8; display: block; font-size: 12px; text-transform: uppercase; margin-bottom: 5px; }}
+            .reason {{ margin-top: 30px; padding: 20px; background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; border-radius: 0 8px 8px 0; }}
+            .reason h3 {{ margin-top: 0; color: #ef4444; }}
+            .back-link {{ display: inline-block; margin-bottom: 20px; color: #38bdf8; text-decoration: none; }}
+            .back-link:hover {{ text-decoration: underline; }}
+            .affiliate-section {{ margin-top: 40px; display: grid; grid-template-columns: 1fr; gap: 20px; }}
+            .aff-card {{ padding: 25px; border-radius: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }}
+            .aff-card.health {{ background-color: #022c22; }}
+            .aff-card.legal {{ background-color: #451a03; }}
+            .aff-card h4 {{ margin: 0 0 15px 0; font-size: 22px; color: #f8fafc; }}
+            .aff-card p {{ font-size: 15px; color: #cbd5e1; margin-bottom: 20px; }}
+            .aff-card a {{ display: inline-block; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; color: white; background: #10b981; }}
+            .aff-card.legal a {{ background: #f59e0b; }}
+            
+            @media (max-width: 600px) {{ .details-grid {{ grid-template-columns: 1fr; }} }}
         </style>
-    
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-JYVX5B6FRC"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){{dataLayer.push(arguments);}}
-  gtag('js', new Date());
-
-  gtag('config', 'G-JYVX5B6FRC');
-</script>
     </head>
     <body>
-        <div class="card">
-            <h1>{row[0]}</h1>
-            <div class="badge">{row[3]} RISK</div>
-            <p><strong>Status:</strong> <span style="color:red;">{row[4]}</span></p>
-            <p><strong>Date Discovered:</strong> {row[6]}</p>
-            <p><strong>Violation Type:</strong> {row[2]}</p>
-            <p><strong>Details:</strong><br/>{row[5]}</p>
-            <a class="back" href="/">&larr; Back to FDA Database</a>
+        <header>
+            <h1><a href="/">PILLSCAM<span style="color: #10b981;">RADAR</span></a></h1>
+        </header>
+        <div class="container">
+            <a href="/" class="back-link">&larr; Back to Database</a>
+            
+            <div class="dossier">
+                <div class="header-dossier">
+                    <h1>{row[0]}</h1>
+                    <div class="badge {row[3].lower()}">{row[3]} RISK ALERT</div>
+                </div>
+                
+                <div class="details-grid">
+                    <div class="detail-item"><strong>Recall / Alert ID</strong> {row[1]}</div>
+                    <div class="detail-item"><strong>Status</strong> <span style="color: #ef4444; font-weight: bold;">{row[4]}</span></div>
+                    <div class="detail-item"><strong>Violation Type</strong> {row[2]}</div>
+                    <div class="detail-item"><strong>Date Discovered</strong> {row[7]}</div>
+                    <div class="detail-item" style="grid-column: 1 / -1;"><strong>Affected Lots / Regulator Info</strong> {row[5]}</div>
+                </div>
+
+                <div class="reason">
+                    <h3>Official Warning Details</h3>
+                    <p style="margin: 0; line-height: 1.6;">{row[6]}</p>
+                </div>
+            </div>
+
+            <div class="affiliate-section">
+                <div class="aff-card legal">
+                    <h4>⚖️ Injured by this product?</h4>
+                    <p>If you or a loved one suffered adverse health effects after using tainted supplements, you might be entitled to financial compensation through a class-action lawsuit.</p>
+                    <a href="https://example.com/lawsuit-eval" target="_blank" rel="sponsored noopener">Get a Free Legal Evaluation</a>
+                </div>
+                <div class="aff-card health">
+                    <h4>🌿 Looking for Safe Alternatives?</h4>
+                    <p>Stop risking your health with unapproved drugs. Discover 100% FDA-compliant, third-party tested alternatives.</p>
+                    <a href="https://example.com/safe-supplements" target="_blank" rel="sponsored noopener">View Verified Safe Supplements</a>
+                </div>
+                <p style="text-align: center; font-size: 12px; color: #64748b; margin-top: 10px;">Disclosure: Sponsored links help keep this database free to the public.</p>
+            </div>
+            
         </div>
     </body>
     </html>
-    '''
+    """
     return HTMLResponse(html)
 
 @app.get("/sitemap.xml")
@@ -10527,6 +10569,67 @@ async def get_directory_letter_page(request: Request, category: str, letter: str
     return HTMLResponse(content=html)
 
 
+
+@app.get("/directory/pills/{page}")
+async def get_pill_directory_page(page: int):
+    per_page = 100
+    offset = (page - 1) * per_page
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT slug, entity_name, domain_url, scam_type, severity_level, discovered_date FROM regulatory_scam_reports ORDER BY discovered_date DESC LIMIT ? OFFSET ?", (per_page, offset))
+    rows = cursor.fetchall()
+    
+    cursor.execute("SELECT COUNT(*) FROM regulatory_scam_reports")
+    total_count = cursor.fetchone()[0]
+    conn.close()
+    
+    if not rows and page != 1:
+        return HTMLResponse("<h1>404 Not Found</h1>", status_code=404)
+        
+    total_pages = (total_count + per_page - 1) // per_page
+    
+    items_html = ""
+    for r in rows:
+        items_html += f"""
+        <div style="background: rgba(15,23,42,0.9); border: 1px solid #1e293b; border-radius: 8px; padding: 20px; margin-bottom: 15px;">
+            <a href="/scam/{r[0]}" style="color: #38bdf8; text-decoration: none; font-size: 18px; font-weight: bold;">{r[1]}</a>
+            <p style="color: #94a3b8; font-size: 14px; margin: 5px 0;">ID: {r[2]} | Type: {r[3]} | Risk: {r[4]} | Date: {r[5]}</p>
+        </div>"""
+        
+    prev_link = f'<a href="/directory/pills/{page-1}" style="color: #10b981; margin-right: 20px;">&larr; Previous Page</a>' if page > 1 else ''
+    next_link = f'<a href="/directory/pills/{page+1}" style="color: #10b981;">Next Page &rarr;</a>' if page < total_pages else ''
+        
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Pill & Supplement Alert Directory - Page {page}</title>
+        <style>
+            body {{ font-family: system-ui, -apple-system, sans-serif; background-color: #020617; color: #f8fafc; margin: 0; padding: 0; }}
+            header {{ background-color: rgba(15,23,42,0.9); padding: 20px; text-align: center; border-bottom: 1px solid #1e293b; }}
+            header h1 {{ margin: 0; font-size: 28px; color: #38bdf8; }}
+            header a {{ color: #38bdf8; text-decoration: none; }}
+            .container {{ max-width: 1000px; margin: 40px auto; padding: 0 20px; }}
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1><a href="/">PILLSCAM<span style="color: #10b981;">RADAR</span></a></h1>
+            <p style="color: #94a3b8;">Official Directory - Page {page} of {total_pages}</p>
+        </header>
+        <div class="container">
+            {{items_html}}
+            <div style="margin-top: 30px; text-align: center;">
+                {{prev_link}}
+                {{next_link}}
+            </div>
+        </div>
+    </body>
+    </html>
+    """.replace("{{items_html}}", items_html).replace("{{prev_link}}", prev_link).replace("{{next_link}}", next_link)
+    return HTMLResponse(html)
 
 @app.get("/api/v1/pills")
 async def api_v1_pills(search: str = "", limit: int = 50, offset: int = 0):
