@@ -1336,7 +1336,7 @@ async def get_pill_scam_page(slug: str):
                 <div class="aff-card vision">
                     <h4 style="color: #38bdf8;">👓 Premium Vision Care</h4>
                     <p>Protect your eyes with high-quality, affordable eyewear and lenses from our verified partner, Fytoo.</p>
-                    <a href="https://www.fytoo.com/category/eyeglasses?page=1&utm_source=affiliate&utm_medium=CJ" target="_blank" rel="sponsored noopener">Shop Fytoo Eyewear</a>
+                    <a href="https://www.kqzyfj.com/click-101863908-17219119" target="_blank" rel="sponsored noopener">Shop Fytoo Eyewear</a><img src="https://www.lduhtrp.net/image-101863908-17219119" width="1" height="1" border="0" style="display:none;"/>
                 </div>
 
                     <p>Stop risking your health with unapproved drugs. Discover 100% FDA-compliant, third-party tested alternatives.</p>
