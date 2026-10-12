@@ -1332,6 +1332,13 @@ async def get_pill_scam_page(slug: str):
                 
                 <div class="aff-card health">
                     <h4>🌿 Looking for Safe Alternatives?</h4>
+
+                <div class="aff-card vision">
+                    <h4 style="color: #38bdf8;">👓 Premium Vision Care</h4>
+                    <p>Protect your eyes with high-quality, affordable eyewear and lenses from our verified partner, Fytoo.</p>
+                    <a href="REPLACE_ME_WITH_FYTOO_LINK" target="_blank" rel="sponsored noopener">Shop Fytoo Eyewear</a>
+                </div>
+
                     <p>Stop risking your health with unapproved drugs. Discover 100% FDA-compliant, third-party tested alternatives.</p>
                     <a href="https://health-beauty-healthbuy.myshopify.com?bg_ref=giNiA8PB3v" target="_blank" rel="sponsored noopener">View Verified Safe Supplements</a>
                 </div>
