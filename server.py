@@ -10507,6 +10507,38 @@ async def get_main_directory(request: Request):
     </html>
     '''
     return HTMLResponse(content=html)
+
+def generate_az_page(title, base_url):
+    letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    grid = ''.join(f'<a href="{base_url}/{c.lower()}">{c}</a>' for c in letters)
+    return f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{title}</title>
+        <style>
+            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0b1528; color: #f8fafc; margin: 0; padding: 0; }}
+            .container {{ max-width: 1000px; margin: 50px auto; padding: 20px; text-align: center; }}
+            h1 {{ color: #10b981; margin-bottom: 40px; }}
+            .grid {{ display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }}
+            .grid a {{ display: inline-block; width: 50px; height: 50px; line-height: 50px; background: #1e293b; color: #38bdf8; text-decoration: none; border-radius: 8px; font-weight: bold; border: 1px solid #334155; transition: all 0.3s ease; }}
+            .grid a:hover {{ background: #38bdf8; color: #0b1528; border-color: #38bdf8; transform: translateY(-3px); }}
+            .back {{ margin-top: 50px; display: inline-block; color: #94a3b8; text-decoration: none; }}
+            .back:hover {{ color: #f8fafc; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>{title}</h1>
+            <div class="grid">{grid}</div>
+            <a href="/directory" class="back">&larr; Back to Directory</a>
+        </div>
+    </body>
+    </html>
+    """
+
 @app.get("/directory/brokers")
 async def get_broker_directory(request: Request):
     return HTMLResponse(content=generate_az_page("Broker Scams Directory (A-Z)", "/directory/brokers"))
