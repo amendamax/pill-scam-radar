@@ -1,4 +1,5 @@
-﻿import sqlite3
+import sys
+import sqlite3
 import ctypes
 import datetime
 
@@ -28,5 +29,6 @@ message = (
 # Print for logs safely
 print(message.encode('ascii', 'ignore').decode('ascii'))
 
-# Alert Box
-ctypes.windll.user32.MessageBoxW(0, message, "PillScamRadar Status", 0x40 | 0x0)
+# Alert Box only when explicitly run interactively
+if "--interactive" in sys.argv:
+    ctypes.windll.user32.MessageBoxW(0, message, "PillScamRadar Status", 0x40 | 0x0)
