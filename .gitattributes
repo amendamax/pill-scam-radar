@@ -1,2 +1,7 @@
-# Auto detect text files and perform LF normalization
 * text=auto
+*.db binary
+*.sqlite binary
+*.jpg binary
+*.png binary
+*.webp binary
+*.ttf binary

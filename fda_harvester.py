@@ -1,66 +1,58 @@
-﻿import sqlite3
-import requests
-import uuid
 import datetime
-import json
-import time
+import os
+import re
+import sqlite3
+import requests
 
-db_path = "scams.db"
+DB_PATH = "/var/data/scams.db" if os.path.exists("/var/data") else "scams.db"
 
-conn = sqlite3.connect(db_path)
-c = conn.cursor()
 
-c.execute('''
-CREATE TABLE IF NOT EXISTS regulatory_scam_reports (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    slug TEXT UNIQUE NOT NULL,
-    entity_name TEXT NOT NULL,
-    domain_url TEXT,
-    scam_type TEXT,
-    severity_level TEXT,
-    status TEXT,
-    regulator_warnings TEXT,
-    description TEXT,
-    discovered_date TEXT,
-    last_updated TEXT
-)
-''')
+def fetch_fda_alerts():
+    print(f"[FDA Harvester] Fetching latest tainted & unapproved drug recalls into {DB_PATH}...")
+    url = (
+        'https://api.fda.gov/drug/enforcement.json?'
+        'search=reason_for_recall:"unapproved"+OR+reason_for_recall:"sildenafil"'
+        '+OR+reason_for_recall:"sibutramine"+OR+reason_for_recall:"tainted"&limit=100'
+    )
+    today_str = datetime.date.today().strftime("%Y-%m-%d")
 
-c.execute("DELETE FROM regulatory_scam_reports")
+    try:
+        response = requests.get(url, timeout=20)
+        if response.status_code != 200:
+            print(f"[FDA Harvester] HTTP {response.status_code}")
+            return 0
 
-print("Fetching data from OpenFDA API...")
+        results = response.json().get("results", [])
+        conn = sqlite3.connect(DB_PATH, timeout=30.0)
+        c = conn.cursor()
+        inserted = 0
 
-batch = []
-urls = [
-    'https://api.fda.gov/drug/enforcement.json?search=reason_for_recall:"unapproved"+OR+reason_for_recall:"sildenafil"+OR+reason_for_recall:"sibutramine"+OR+reason_for_recall:"tainted"&limit=1000'
-]
-
-today_str = datetime.date.today().strftime("%Y-%m-%d")
-total_fetched = 0
-
-for url in urls:
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        results = data.get("results", [])
-        total_fetched += len(results)
-        
         for item in results:
-            entity_name = item.get("recalling_firm", "Unknown Firm")
-            raw_desc = item.get("product_description", "Unknown Product")
-            
-            # Create a slug from firm and random hash
-            clean_firm = "".join(e for e in entity_name if e.isalnum()).lower()
-            slug = f"{clean_firm}-{str(uuid.uuid4()).split('-')[0]}"
-            
-            domain_url = item.get("city", "") + ", " + item.get("state", "") + " (FDA Recall)"
-            scam_type = "Unapproved/Tainted Drug"
-            if "sildenafil" in raw_desc.lower() or "tadalafil" in raw_desc.lower():
+            recall_num = (item.get("recall_number") or "").strip()
+            firm = (item.get("recalling_firm") or "Unknown Firm").strip()
+            raw_desc = (item.get("product_description") or "Unknown Product").strip()
+            prod_short = raw_desc.split(",")[0].split("(")[0].strip()[:80]
+            entity_name = f"{prod_short} ({firm})"[:120] if prod_short else firm[:120]
+
+            if recall_num:
+                slug = re.sub(r"[^a-z0-9-]+", "-", recall_num.lower()).strip("-")
+            else:
+                slug = re.sub(r"[^a-z0-9-]+", "-", entity_name.lower()).strip("-")[:50]
+
+            city = item.get("city", "")
+            state = item.get("state", "")
+            domain_url = f"FDA Recall #{recall_num}" if recall_num else f"{city}, {state} (FDA Recall)"
+
+            low_desc = (raw_desc + " " + item.get("reason_for_recall", "")).lower()
+            if "sildenafil" in low_desc or "tadalafil" in low_desc:
                 scam_type = "Tainted Male Enhancement"
-            elif "sibutramine" in raw_desc.lower() or "weight loss" in raw_desc.lower():
+            elif "sibutramine" in low_desc or "weight loss" in low_desc:
                 scam_type = "Tainted Weight Loss Pill"
-                
-            # Class I is most severe
+            elif "dietary" in low_desc:
+                scam_type = "Dietary Supplement"
+            else:
+                scam_type = "Unapproved/Tainted Drug"
+
             class_str = item.get("classification", "")
             if "Class I" in class_str and "Class II" not in class_str:
                 severity = "CRITICAL"
@@ -68,42 +60,37 @@ for url in urls:
                 severity = "HIGH"
             else:
                 severity = "MEDIUM"
-                
+
             status_api = item.get("status", "Recalled")
-            if status_api == "Terminated":
-                status = "RECALL TERMINATED"
-            else:
-                status = "SCAM/RECALL ACTIVE"
-                
-            regulator = "FDA (USA) - OpenFDA"
+            status = "RECALL TERMINATED" if status_api == "Terminated" else "SCAM/RECALL ACTIVE"
+            regulator = item.get("code_info") or "FDA (USA) - OpenFDA"
             description = f"FDA RECALL: {item.get('reason_for_recall', '')} | PRODUCT: {raw_desc}"
-            
+
             raw_date = item.get("recall_initiation_date", "")
-            if len(raw_date) == 8:
-                disc_date = f"{raw_date[0:4]}-{raw_date[4:6]}-{raw_date[6:8]}"
-            else:
-                disc_date = today_str
-                
-            batch.append((slug, entity_name, domain_url, scam_type, severity, status, regulator, description, disc_date, today_str))
+            disc_date = f"{raw_date[0:4]}-{raw_date[4:6]}-{raw_date[6:8]}" if len(raw_date) == 8 else today_str
 
-    else:
-        print(f"Error fetching: {response.status_code}")
-    time.sleep(1)
+            try:
+                c.execute(
+                    """
+                    INSERT OR IGNORE INTO regulatory_scam_reports
+                    (slug, entity_name, domain_url, scam_type, severity_level, status, regulator_warnings, description, discovered_date, last_updated)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (slug, entity_name, domain_url, scam_type, severity, status, regulator[:250], description, disc_date, today_str),
+                )
+                if c.rowcount > 0:
+                    inserted += 1
+            except sqlite3.Error:
+                pass
 
-# Ensure uniqueness by dropping duplicates on slug if any (uuid usually handles it, but just in case)
-c.executemany("INSERT INTO regulatory_scam_reports (slug, entity_name, domain_url, scam_type, severity_level, status, regulator_warnings, description, discovered_date, last_updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", batch)
+        conn.commit()
+        conn.close()
+        print(f"[FDA Harvester] Inserted {inserted} new FDA enforcement records.")
+        return inserted
+    except Exception as e:
+        print(f"[FDA Harvester] Error: {e}")
+        return 0
 
-conn.commit()
-conn.close()
 
-print(f"scams.db successfully generated with {total_fetched} real FDA enforcement records!")
-
-# Modify server.py to point to scams.db instead of database.db
-with open("server.py", "r") as f:
-    server_code = f.read()
-    
-server_code = server_code.replace('db_path = "database.db"', 'db_path = "scams.db"')
-with open("server.py", "w") as f:
-    f.write(server_code)
-
-print("Updated server.py to point to scams.db")
+if __name__ == "__main__":
+    fetch_fda_alerts()
